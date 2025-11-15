@@ -36,9 +36,8 @@ st.set_page_config(
 )
 
 
-@st.cache_resource
 def load_agent():
-    """Load trained RL agent (cached)"""
+    """Load trained RL agent (NO CACHE - always fresh)"""
     env = GroceryInventoryEnv(num_products=5, episode_length=30)
     agent = GroceryAgent(env)
 
