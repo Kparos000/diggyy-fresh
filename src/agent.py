@@ -4,6 +4,7 @@ Implements PPO training and baseline comparison
 """
 
 import os
+import sys
 import numpy as np
 from typing import Dict, List, Tuple
 from stable_baselines3 import PPO
@@ -11,6 +12,9 @@ from stable_baselines3.common.callbacks import BaseCallback, EvalCallback
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.common.evaluation import evaluate_policy
 import gymnasium as gym
+
+# Add parent directory to path for direct script execution
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.environment import GroceryInventoryEnv
 
