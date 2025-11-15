@@ -33,7 +33,7 @@ class OllamaLLM:
             response = requests.post(
                 self.generate_url,
                 json=payload,
-                timeout=30,
+                timeout=120,  # Increased timeout for slower LLM responses
             )
 
             if response.status_code == 200:

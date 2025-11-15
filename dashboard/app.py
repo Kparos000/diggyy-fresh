@@ -421,27 +421,37 @@ def main():
             rl_info = st.session_state['rl_info']
 
             if st.button("🧠 Generate Insights", type="primary"):
-                with st.spinner("LLM is analyzing performance..."):
-                    # Prepare stats
-                    total_stats = {
-                        'revenue': rl_info['total_revenue'],
-                        'spoilage': rl_info['total_spoilage'],
-                        'waste_pct': calculate_waste_percentage(
-                            rl_info['total_spoilage'],
-                            rl_info['total_revenue']
-                        ),
-                        'stockouts': rl_info['total_stockouts'],
-                    }
+                with st.spinner("LLM is analyzing performance (may take 30-60 seconds)..."):
+                    try:
+                        # Prepare stats
+                        total_stats = {
+                            'revenue': rl_info['total_revenue'],
+                            'spoilage': rl_info['total_spoilage'],
+                            'waste_pct': calculate_waste_percentage(
+                                rl_info['total_spoilage'],
+                                rl_info['total_revenue']
+                            ),
+                            'stockouts': rl_info['total_stockouts'],
+                        }
 
-                    product_breakdown = {
-                        'berries': {'waste': 'high', 'stockouts': 'low'},
-                        'milk': {'waste': 'medium', 'stockouts': 'medium'},
-                        'bread': {'waste': 'low', 'stockouts': 'low'},
-                    }
+                        product_breakdown = {
+                            'berries': {'waste': 'high', 'stockouts': 'low'},
+                            'milk': {'waste': 'medium', 'stockouts': 'medium'},
+                            'bread': {'waste': 'low', 'stockouts': 'low'},
+                        }
 
-                    # Generate insights
-                    insights = llm.generate_insights(total_stats, product_breakdown)
-                    st.session_state['insights'] = insights
+                        # Generate insights
+                        insights = llm.generate_insights(total_stats, product_breakdown)
+
+                        # Check if error message
+                        if insights.startswith("Error:"):
+                            st.error(f"LLM Error: {insights}")
+                            st.info("💡 Try: 1) Check Ollama is running (`ollama serve`), 2) Model is loaded (`ollama pull llama3.2`)")
+                        else:
+                            st.session_state['insights'] = insights
+                    except Exception as e:
+                        st.error(f"Failed to generate insights: {str(e)}")
+                        st.info("Make sure Ollama is running and llama3.2 model is available")
 
             if 'insights' in st.session_state:
                 st.subheader("Key Insights")

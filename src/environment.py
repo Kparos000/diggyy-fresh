@@ -104,8 +104,9 @@ class GroceryInventoryEnv(gym.Env):
         # 5. Calculate freshness bonus
         freshness_bonus = self._calculate_freshness_bonus()
 
-        # 6. Calculate reward
-        reward = revenue - 2.5 * spoilage_cost - 3 * stockout_penalty + freshness_bonus
+        # 6. Calculate reward - balanced for business profitability
+        # Higher stockout penalty (10x) ensures agent maintains inventory
+        reward = revenue - 2.5 * spoilage_cost - 10 * stockout_penalty + freshness_bonus
 
         # 7. Update state
         self.current_step += 1
