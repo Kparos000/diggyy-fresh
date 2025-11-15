@@ -143,9 +143,8 @@ class GroceryAgent:
         if not os.path.exists(f"{path}.zip"):
             raise FileNotFoundError(f"Model not found at {path}.zip")
 
-        # Wrap environment in VecEnv for compatibility
-        vec_env = DummyVecEnv([lambda: self.env])
-        self.model = PPO.load(path, env=vec_env)
+        # Load without wrapping - use same env as training
+        self.model = PPO.load(path, env=self.env)
         print(f"Model loaded from {path}")
 
     def predict(self, observation, deterministic: bool = True):
@@ -154,21 +153,6 @@ class GroceryAgent:
             raise ValueError("Model not trained or loaded")
 
         action, *_ = self.model.predict(observation, deterministic=deterministic)
-
-        # Debug: print original action
-        print(f"DEBUG: Raw action from model: {action}, type: {type(action)}, shape: {getattr(action, 'shape', 'N/A')}")
-
-        # Ensure action has the correct shape (num_products,)
-        # Remove any batch dimensions if present
-        action = np.atleast_1d(action).flatten()
-
-        print(f"DEBUG: After flatten: {action}, shape: {action.shape}")
-
-        # Verify action has correct number of elements
-        expected_size = self.env.action_space.shape[0]
-        if action.size != expected_size:
-            raise ValueError(f"Action size mismatch: got {action.size}, expected {expected_size}")
-
         return action
 
     def evaluate(self, n_episodes: int = 10) -> Dict:
