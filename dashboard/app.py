@@ -228,9 +228,14 @@ def main():
         with col1:
             if st.button("🚀 Run RL Agent Simulation", type="primary"):
                 with st.spinner("Running RL agent simulation..."):
-                    rl_df, rl_info = run_live_simulation(env, agent, "RL Agent")
-                    st.session_state['rl_df'] = rl_df
-                    st.session_state['rl_info'] = rl_info
+                    try:
+                        rl_df, rl_info = run_live_simulation(env, agent, "RL Agent")
+                        st.session_state['rl_df'] = rl_df
+                        st.session_state['rl_info'] = rl_info
+                    except Exception as e:
+                        st.error(f"RL Agent Error: {str(e)}")
+                        st.warning("⚠️ Model needs retraining. Run: `python src/agent.py`")
+                        st.info("In the meantime, try the Baseline simulation or RL vs Baseline comparison tab.")
 
         with col2:
             if st.button("📊 Run Baseline Simulation"):
@@ -306,17 +311,21 @@ def main():
 
         if st.button("🔄 Run Comparison", type="primary"):
             with st.spinner("Running both simulations..."):
-                # Run RL agent
-                rl_df, rl_info = run_live_simulation(env, agent, "RL Agent")
+                try:
+                    # Run RL agent
+                    rl_df, rl_info = run_live_simulation(env, agent, "RL Agent")
 
-                # Run baseline
-                baseline = BaselinePolicy(order_quantity=baseline_order_qty)
-                baseline_df, baseline_info = run_live_simulation(env, baseline, "Baseline")
+                    # Run baseline
+                    baseline = BaselinePolicy(order_quantity=baseline_order_qty)
+                    baseline_df, baseline_info = run_live_simulation(env, baseline, "Baseline")
 
-                st.session_state['comparison_rl_df'] = rl_df
-                st.session_state['comparison_rl_info'] = rl_info
-                st.session_state['comparison_baseline_df'] = baseline_df
-                st.session_state['comparison_baseline_info'] = baseline_info
+                    st.session_state['comparison_rl_df'] = rl_df
+                    st.session_state['comparison_rl_info'] = rl_info
+                    st.session_state['comparison_baseline_df'] = baseline_df
+                    st.session_state['comparison_baseline_info'] = baseline_info
+                except Exception as e:
+                    st.error(f"Simulation Error: {str(e)}")
+                    st.warning("⚠️ Model needs retraining. Run: `python src/agent.py`")
 
         if 'comparison_rl_df' in st.session_state:
             rl_df = st.session_state['comparison_rl_df']
