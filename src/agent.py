@@ -157,6 +157,14 @@ class GroceryAgent:
             raise ValueError("Model not trained or loaded")
 
         action, *_ = self.model.predict(observation, deterministic=deterministic)
+
+        # Ensure action is array with correct shape
+        action = np.asarray(action, dtype=np.float32)
+        if action.ndim == 0:
+            # If scalar, expand to expected shape
+            num_products = self.env.action_space.shape[0]
+            action = np.full(num_products, action, dtype=np.float32)
+
         return action
 
     def evaluate(self, n_episodes: int = 10) -> Dict:
