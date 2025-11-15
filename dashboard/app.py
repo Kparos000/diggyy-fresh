@@ -69,9 +69,9 @@ def run_live_simulation(env, policy, policy_name: str):
     while not done:
         # Get action
         if hasattr(policy, 'predict'):
-            action, _ = policy.predict(obs, deterministic=True)
+            action, *_ = policy.predict(obs, deterministic=True)
         else:
-            action, _ = policy.predict(obs)
+            action, *_ = policy.predict(obs)
 
         # Take step
         obs, reward, terminated, truncated, info = env.step(action)
