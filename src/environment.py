@@ -6,7 +6,7 @@ Simulates multi-product inventory with spoilage, demand, and ordering decisions
 import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple, List, Optional
 
 
 class GroceryInventoryEnv(gym.Env):
@@ -29,7 +29,13 @@ class GroceryInventoryEnv(gym.Env):
         'tomatoes': {'shelf_life': 5, 'price': 2.49, 'cost': 1.25},
     }
 
-    def __init__(self, num_products: int = 5, max_inventory: int = 100, episode_length: int = 30):
+    def __init__(
+        self,
+        num_products: int = 5,
+        max_inventory: int = 100,
+        episode_length: int = 30,
+        demand_profiles: Optional[Dict] = None
+    ):
         super().__init__()
 
         self.num_products = num_products
@@ -58,8 +64,12 @@ class GroceryInventoryEnv(gym.Env):
         self.total_spoilage = 0
         self.total_stockouts = 0
 
-        # Demand patterns (placeholder - will be replaced with Instacart data)
-        self.base_demand = {product: 15 for product in self.product_names}
+        # Load demand patterns (synthetic or from data loader)
+        self.demand_profiles = demand_profiles or self._get_default_profiles()
+        self.base_demand = {
+            product: self.demand_profiles[product]['base_demand']
+            for product in self.product_names
+        }
         self.demand_variability = 0.3
 
     def reset(self, seed=None, options=None):
@@ -173,13 +183,14 @@ class GroceryInventoryEnv(gym.Env):
         daily_sales = {}
 
         for product in self.product_names:
-            # Generate demand (placeholder - will use Instacart data)
+            # Generate demand using realistic patterns from demand profiles
             base = self.base_demand[product]
 
-            # Day-of-week pattern (weekends have 30% more demand)
-            day_multiplier = 1.3 if self.day_of_week in [5, 6] else 1.0
+            # Day-of-week pattern (product-specific from demand profiles)
+            day_pattern = self.demand_profiles[product]['day_pattern']
+            day_multiplier = day_pattern.get(self.day_of_week, 1.0)
 
-            # Add randomness
+            # Add randomness to simulate real-world variability
             noise = np.random.uniform(1 - self.demand_variability, 1 + self.demand_variability)
             demand = int(base * day_multiplier * noise)
 
@@ -290,6 +301,42 @@ class GroceryInventoryEnv(gym.Env):
             'total_revenue': self.total_revenue,
             'total_spoilage': self.total_spoilage,
             'total_stockouts': self.total_stockouts,
+        }
+
+    def _get_default_profiles(self) -> Dict:
+        """
+        Get default synthetic demand profiles with realistic patterns
+
+        These patterns are based on typical grocery shopping behavior:
+        - Weekends have higher demand (people shop for the week)
+        - Different products have different patterns
+        - Berries: Peak Friday-Sunday (weekend consumption)
+        - Milk: Steady with weekend spike (staple item)
+        - Bread: Strong weekend pattern (baking, sandwiches)
+        - Leafy greens: Thu-Sat peak (health-conscious, meal prep)
+        - Tomatoes: Weekend cooking spike
+        """
+        return {
+            'berries': {
+                'base_demand': 15,
+                'day_pattern': {0: 0.9, 1: 0.8, 2: 0.9, 3: 1.0, 4: 1.1, 5: 1.3, 6: 1.2},
+            },
+            'milk': {
+                'base_demand': 20,
+                'day_pattern': {0: 1.0, 1: 0.9, 2: 0.9, 3: 1.0, 4: 1.1, 5: 1.2, 6: 1.1},
+            },
+            'bread': {
+                'base_demand': 18,
+                'day_pattern': {0: 1.0, 1: 0.9, 2: 1.0, 3: 1.0, 4: 1.1, 5: 1.3, 6: 1.2},
+            },
+            'leafy_greens': {
+                'base_demand': 12,
+                'day_pattern': {0: 0.9, 1: 0.8, 2: 0.9, 3: 1.0, 4: 1.2, 5: 1.3, 6: 1.1},
+            },
+            'tomatoes': {
+                'base_demand': 14,
+                'day_pattern': {0: 1.0, 1: 0.9, 2: 1.0, 3: 1.0, 4: 1.1, 5: 1.2, 6: 1.1},
+            },
         }
 
     def render(self):

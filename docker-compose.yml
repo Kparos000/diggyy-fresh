@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # Training service - trains RL agent
+  train:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: diggyy-fresh-train
+    volumes:
+      - ./models:/app/models
+      - ./logs:/app/logs
+      - ./data/processed:/app/data/processed
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: python src/agent.py
+
+  # Dashboard service - runs Streamlit app
+  dashboard:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dashboard
+    container_name: diggyy-fresh-dashboard
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./models:/app/models
+      - ./data/processed:/app/data/processed
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - train
+    restart: unless-stopped
+
+volumes:
+  models:
+  logs:
+  data:
