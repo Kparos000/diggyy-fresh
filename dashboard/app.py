@@ -72,6 +72,13 @@ def run_live_simulation(env, policy, policy_name: str):
         else:
             action, *_ = policy.predict(obs)
 
+        # CRITICAL FIX: Ensure action is always an array
+        import numpy as np
+        action = np.asarray(action, dtype=np.float32)
+        if action.ndim == 0:
+            # Scalar detected - convert to array with 5 products
+            action = np.full(5, action, dtype=np.float32)
+
         # Take step
         obs, reward, terminated, truncated, info = env.step(action)
         done = terminated or truncated
